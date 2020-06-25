@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<head>
+	<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+	<title>Master Spark</title>
+	<link rel="icon" type="image/x-icon" href="images/icon.ico" />
+	<link rel="stylesheet" type="text/css" href="css/style.css">
+	<audio preload="metadata" autoplay="autoplay" loop="loop">
+		<source src="images/master.mp3" type="audio/mpeg" />
+		<embed height="100" width="100" src="images/master.mp3" />
+	</audio>
+
+	<!-- three.js library -->
+	<script src='js/three.min.js'></script>
+	<!-- ar.js -->
+	<script src="js/ar.js"></script>
+	<script>THREEx.ArToolkitContext.baseURL = 'images/'</script>
+</head>
+
+<body>
+	<div>
+		<script type="x-shader/x-vertex" id="vertexshader">
+            void main()
+            {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+            }
+        </script>
+		<script type="x-shader/x-fragment" id="fragmentshader">
+            void main()
+            {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            }
+        </script>
+		<script type="x-shader/x-fragment" id="fragmentshader1">
+        void main()
+            {
+                gl_FragColor = vec4(0.0, 1.0, 0.0, 0.8);
+            }
+    </script>
+		<script type="x-shader/x-fragment" id="fragmentshader2">
+        void main()
+            {
+                gl_FragColor = vec4(1.0, 1.0, 0.0, 0.8);
+            }
+	</script>
+		<script type="x-shader/x-fragment" id="fragmentshader3">
+        void main()
+            {
+                gl_FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+            }
+	</script>
+		<script type="x-shader/x-fragment" id="fragmentshader4">
+        void main()
+            {
+                gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);
+            }
+    </script>
+		<script>
+
+			// init renderer
+			var renderer = new THREE.WebGLRenderer({
+				antialias: true,
+				alpha: true
+			});
+			renderer.setClearColor(new THREE.Color('lightgrey'), 0)
+			renderer.setSize(640, 480);
+			renderer.domElement.style.position = 'absolute'
+			renderer.domElement.style.top = '0px'
+			renderer.domElement.style.left = '0px'
+			document.body.appendChild(renderer.domElement);
+
+
+			// init scene and camera
+			var scene = new THREE.Scene();
+
+			//////////////////////////////////////////////////////////////////////////////////
+			//		Initialize a basic camera
+			//////////////////////////////////////////////////////////////////////////////////
+
+			// Create a camera
+			var camera = new THREE.Camera();
+			scene.add(camera);
+
+			////////////////////////////////////////////////////////////////////////////////
+			//          handle arToolkitSource
+			////////////////////////////////////////////////////////////////////////////////
+
+			// array of functions for the rendering loop
+			var onRenderFcts = [];
+
+			var arToolkitSource = new THREEx.ArToolkitSource({
+				// to read from the webcam
+				sourceType: 'webcam',
+			})
+
+			arToolkitSource.init(function onReady() {
+				onResize()
+			})
+
+			// handle resize
+			window.addEventListener('resize', function () {
+				onResize()
+			})
+			function onResize() {
+				arToolkitSource.onResizeElement()
+				arToolkitSource.copyElementSizeTo(renderer.domElement)
+				if (arToolkitContext.arController !== null) {
+					arToolkitSource.copyElementSizeTo(arToolkitContext.arController.canvas)
+				}
+			}
+			////////////////////////////////////////////////////////////////////////////////
+			//          initialize arToolkitContext
+			////////////////////////////////////////////////////////////////////////////////
+
+
+			// create atToolkitContext
+			var arToolkitContext = new THREEx.ArToolkitContext({
+				cameraParametersUrl: THREEx.ArToolkitContext.baseURL + 'camera_para.dat',
+				detectionMode: 'mono',
+			})
+			// initialize it
+			arToolkitContext.init(function onCompleted() {
+				// copy projection matrix to camera
+				camera.projectionMatrix.copy(arToolkitContext.getProjectionMatrix());
+			})
+
+			// update artoolkit on every frame
+			onRenderFcts.push(function () {
+				if (arToolkitSource.ready === false) return
+
+				arToolkitContext.update(arToolkitSource.domElement)
+
+				// update scene.visible if the marker is seen
+				scene.visible = camera.visible
+			})
+
+			////////////////////////////////////////////////////////////////////////////////
+			//          Create a ArMarkerControls
+			////////////////////////////////////////////////////////////////////////////////
+
+			// init controls for camera
+			var markerControls = new THREEx.ArMarkerControls(arToolkitContext, camera, {
+				type: 'pattern',
+				patternUrl: THREEx.ArToolkitContext.baseURL + 'patt.hiro',
+				changeMatrixMode: 'cameraTransformMatrix'
+			})
+			// as we do changeMatrixMode: 'cameraTransformMatrix', start with invisible scene
+			scene.visible = false;
+
+			//////////////////////////////////////////////////////////////////////////////////
+			//		add an object in the scene
+			//////////////////////////////////////////////////////////////////////////////////
+
+			var array = [];
+			var dir = [];
+			var objNum = 0;
+
+			var geometry1 = new THREE.SphereGeometry(0.05, 10, 10);
+			var material1 = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexshader').textContent,
+				fragmentShader: document.getElementById('fragmentshader1').textContent
+			});
+			var material2 = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexshader').textContent,
+				fragmentShader: document.getElementById('fragmentshader2').textContent
+			});
+			var material3 = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexshader').textContent,
+				fragmentShader: document.getElementById('fragmentshader').textContent
+			});
+			var material4 = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexshader').textContent,
+				fragmentShader: document.getElementById('fragmentshader3').textContent
+			});
+			var material5 = new THREE.ShaderMaterial({
+				vertexShader: document.getElementById('vertexshader').textContent,
+				fragmentShader: document.getElementById('fragmentshader4').textContent
+			});
+
+			var pivot1 = new THREE.Object3D();
+			scene.add(pivot1);
+			var pivot2 = new THREE.Object3D();
+			scene.add(pivot2);
+			function createField(num, depth, geometry, material, pivot) {
+				var a = 5.0;
+				var b = 8.0;
+				var step = num / 720.0;
+				for (var i = 0; i < num; i++) {
+					var x = (a + b) * Math.cos(step * i * 5) - b * Math.cos((a / b + 1) * (step * i * 5));
+					var z = (a + b) * Math.sin(step * i * 5) - b * Math.sin((a / b + 1) * (step * i * 5));
+					var sphere = new THREE.Mesh(geometry, material);
+					//mdoel position set
+					sphere.position.set(x * 0.08, 0, z * 0.08);
+					sphere.scale.set(0.3, 0.3, 0.3);
+					scene.add(sphere);
+					pivot.add(sphere);
+				}
+			}
+			createField(3000, 0.05, geometry1, material1, pivot1);
+			createField(3000, 0.05, geometry1, material2, pivot2);
+			//create models and shape them
+			function createModel(num, radius, depth, geometry, material) {
+				for (var i = 0; i < num; i++) {
+					var x = (radius + 3 * Math.sin(5 * 3.14 * i / num) * Math.sin(5 * 3.14 * i / num)) * Math.cos(2 * 3.14 * i / num);
+					var z = (radius + 3 * Math.sin(5 * 3.14 * i / num) * Math.sin(5 * 3.14 * i / num)) * Math.sin(2 * 3.14 * i / num);
+					//what I need is a model's position.
+					var sphere = new THREE.Mesh(geometry, material);
+					//mdoel position set
+					sphere.position.set(x * 0.3, depth, z * 0.3);
+					scene.add(sphere);
+					array.push(sphere);
+					dir.push(sphere.position);
+				}
+				objNum += num;
+			}
+			//create models
+			createModel(50, 2, 0.1, geometry1, material5);
+			createModel(50, 2, 0.1, geometry1, material4);
+			createModel(80, 2, 0.2, geometry1, material3);
+			createModel(80, 2, 0.3, geometry1, material3);
+			createModel(80, 2, 0.4, geometry1, material3);
+			createModel(80, 2, 0.5, geometry1, material3);
+			createModel(80, 2, 0.6, geometry1, material3);
+			createModel(80, 2, 0.25, geometry1, material3);
+			createModel(80, 2, 0.35, geometry1, material3);
+			createModel(80, 2, 0.45, geometry1, material3);
+			createModel(80, 2, 0.55, geometry1, material3);
+			createModel(80, 2, 0.65, geometry1, material3);
+			createModel(80, 2, 0.7, geometry1, material3);
+
+			var j = 0;
+
+			onRenderFcts.push(function (delta) {               //魔理沙の弾幕,始まります.
+				pivot1.rotateY(0.02);
+				pivot2.rotateY(-0.02);
+				for (var i = 0; i < 50; i++) {
+					array[i].position.x += dir[i].x * 0.2;
+					array[i].position.z += dir[i].z * 0.2;
+
+					if (Math.sqrt(Math.pow(array[i].position.x, 2) + Math.pow(array[i].position.z, 2)) >= 2) {
+						array[i].position.x *= 0.01;
+						array[i].position.z *= 0.01;
+					}
+				}
+				if (j > 0.5) {
+					for (var i = 50; i < 100; i++) {
+						array[i].position.x += dir[i].x * 0.2;
+						array[i].position.z += dir[i].z * 0.2;
+
+						if (Math.sqrt(Math.pow(array[i].position.x, 2) + Math.pow(array[i].position.z, 2)) >= 2) {
+							array[i].position.x *= 0.01;
+							array[i].position.z *= 0.01;
+						}
+					}
+				}
+				var offset = Math.sin(j) * 0.03;
+				for (var i = 100; i < objNum; i++) {
+					array[i].position.x += dir[i].x * offset;
+					array[i].position.z += dir[i].z * offset;
+					dir[i].applyAxisAngle(new THREE.Vector3(0, 1, 0), j * 0.005);//rotate this axis
+				}
+				j += 0.05;
+			}
+
+			)
+
+			//////////////////////////////////////////////////////////////////////////////////
+			//		render the whole thing on the page
+			//////////////////////////////////////////////////////////////////////////////////
+
+			// render the scene
+			onRenderFcts.push(function () {
+				renderer.render(scene, camera);
+			})
+
+			// run the rendering loop
+			var lastTimeMsec = null;
+			requestAnimationFrame(function animate(nowMsec) {
+				// keep looping
+				requestAnimationFrame(animate);
+				// measure time
+				lastTimeMsec = lastTimeMsec || nowMsec - 1000 / 60
+				var deltaMsec = Math.min(200, nowMsec - lastTimeMsec)
+				lastTimeMsec = nowMsec
+				// call each update function
+				onRenderFcts.forEach(function (onRenderFct) {
+					onRenderFct(deltaMsec / 1000, nowMsec / 1000)
+				})
+			})
+		</script>
+</body>

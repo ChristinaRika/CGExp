@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+    <meta lang="en" charset="UTF-8">
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <title>CG Exp 01</title>
+    </head>
+    <body>
+        <div>
+                <div id="instruction">
+                    Instruction:<br><br><hr>
+                        1 : Rock<br><br><hr>
+                        2 : Small Rock<br><br><hr>
+                        3 : Color<br><br><hr>
+                        4 : LambertLight<br><br><hr>
+                        5 : UV Animation<br><br><hr>
+                        6 : Wood<br><br><hr>
+                        7 : Metal<br><br><hr>
+                        Others : Rocks map
+                    </div>
+                    <div id="container">
+                    </div>
+        </div>       
+        <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src = "js/OrbitControls.js"></script>
+        <script type="x-shader/x-vertex" id="vertexshader">
+            uniform float amplitude;
+            
+            varying vec3 vNormal; 
+            varying vec2 vUv;
+            void main()
+            {
+                vNormal = normal;                    //calculate normal direction
+                vUv = uv;
+                vec3 newPosition = position;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(newPosition, 1.0); 
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader">
+            varying vec3 vNormal;
+            varying vec2 vUv;
+            uniform vec3 color;
+            uniform sampler2D texture;
+            void main()
+            {
+                vec3 light = vec3(0.5, 0.2, 1.0);
+                light = normalize(light);
+                float dProd = dot(vNormal, light) * 0.5 + 0.5;      //mapping the range between 0 and 1
+                vec4 tcolor = texture2D(texture, vUv);
+                vec4 gray = vec4(tcolor.r,tcolor.g,tcolor.b,1.0);
+                gl_FragColor = gray * vec4(vec3(dProd), 1.0)* 0.5 + vec4(vec3(dProd) * vec3(color), 1.0) * 0.5;
+            }
+        </script>
+        <script type="x-shader/x-vertex" id="vertexshader_light">
+            varying vec3 vNormal; 
+            void main()
+            {
+                vNormal = normalMatrix * normal;                    //calculate normal direction
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader_light">
+            varying vec3 vNormal;
+            void main()
+            {
+                vec3 lightdir = vec3(0.5, 0.2, 1.0);
+                lightdir = normalize(lightdir);
+                float dProd = max(0.0, dot(vNormal, lightdir));
+                gl_FragColor = vec4(dProd, dProd, dProd, 1.0);
+            }
+        </script>
+        <script type="x-shader/x-vertex" id="vertexshader_uv">
+            attribute float vertexDisplacement;
+            uniform float delta;
+            varying float vOpacity;
+            varying vec3 vNormal; 
+            varying vec3 vUv;
+            void main()
+            {
+                vNormal = normal;                    
+                vUv = position;
+                vOpacity = vertexDisplacement;
+
+                vec3 p = position;
+                p.x += sin(vertexDisplacement) * 1.0;
+                p.y += cos(vertexDisplacement) * 1.0;
+
+                vec4 modelViewPosition = modelViewMatrix * vec4(p, 1.0);
+                gl_Position = projectionMatrix * modelViewPosition;
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader_uv">
+            uniform float delta;
+
+            varying vec3 vNormal;
+            varying vec3 vUv;
+            varying float vOpacity;
+            void main()
+            {
+                vec3 lightdir = vec3(0.5, 0.2, 1.0);
+                lightdir = normalize(lightdir);
+                float dPord = max(0.0, dot(lightdir, vNormal));
+
+                float r = 1.0 + cos(vUv.x * delta);
+                float g = 0.5 + sin(delta) * 0.5;
+                float b = 0.0;
+                vec3 rgb = vec3(r, g, b);
+
+                gl_FragColor = vec4(rgb, vOpacity);
+            }
+        </script>
+        <script type="x-shader/x-vertex" id="vertexshader_color">
+            void main()
+            {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader_color">
+            void main()
+            {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            }
+        </script>   
+        <script>
+            alert("press 1,2,3,4,5,6,7,others to change material");
+            alert("1 : Rock\n2 : Small Rock\n3 : Color\n4 : LambertLight\n5 : UV Animation\n6 : Wood\n7 : Metal\nOthers : Rocks map");
+        </script>
+        <script type="text/javascript" src="js/myWebGL.js">
+        </script>
+    </body>
+</html>

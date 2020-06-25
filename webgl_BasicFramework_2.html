@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+    <meta lang="en" charset="UTF-8">
+    <head>
+        <link rel="stylesheet" type="text/css" href="css/style.css">
+        <title>CG Exp 01</title>
+        <h1>影流之陈</h1>
+    </head>
+    <body>
+        <div id="info"></div>
+        <script type="text/javascript" src="js/three.min.js"></script>
+        <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src="js/OrbitControls.js"></script>
+        <script type="x-shader/x-vertex" id="vertexshader">
+            varying vec3 vNormal; 
+            void main()
+            {
+                vNormal = normalMatrix * normal;                    //calculate normal direction
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+            }
+        </script>
+        <script type="x-shader/x-fragment" id="fragmentshader">
+            varying vec3 vNormal;
+            void main()
+            {
+                vec3 lightdir = vec3(0.5, 0.2, 1.0);
+                lightdir = normalize(lightdir);
+                float dProd = max(0.0, dot(vNormal, lightdir));
+                gl_FragColor = vec4(dProd, dProd, dProd, 1.0);
+            }
+        </script>
+        <script>
+            var scene = new THREE.Scene();
+            
+            var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+            
+            var renderer = new THREE.WebGLRenderer({
+                alpha : true,
+                antialias : true
+            });
+            
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            document.body.appendChild(renderer.domElement);
+            var geometry = new THREE.CubeGeometry(1,1,1);
+            //basic
+            var material = new THREE.MeshBasicMaterial({color: 0x00ff00});
+            //shader
+            var shaderMaterial = new THREE.ShaderMaterial({
+                vertexShader : document.getElementById('vertexshader').textContent ,
+                fragmentShader : document.getElementById('fragmentshader').textContent
+            });
+            var cube = new THREE.Mesh(geometry, shaderMaterial); 
+            cube.position.x = 2;
+            scene.add(cube);
+
+            var cube1 = new THREE.Mesh(geometry, shaderMaterial); 
+            cube1.position.x = 0;
+            scene.add(cube1);
+            var cube2 = new THREE.Mesh(geometry, shaderMaterial); 
+            cube2.position.x = -2;
+            scene.add(cube2);
+
+            var controls = new THREE.OrbitControls(camera, renderer.domElement);
+/*
+            var sphereGeometry = new THREE.SphereGeometry(1,32,32);
+            var sphereMaterial = new THREE.ShaderMaterial({
+                vertexShader : document.getElementById("vertexshader").textContent ,
+                fragmentShader : document.getElementById("fragmentshader").textContent
+            });
+            var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+            scene.add(sphere);
+*/
+            scene.add(new THREE.AmbientLight(0x00ff00, 0.6));
+            camera.position.z = 5;
+            function render() {
+                requestAnimationFrame(render);
+                controls.update();
+
+                cube.rotation.x += 0.1;
+                cube.rotation.y += 0.1; 
+                cube1.rotation.x += 0.1;
+                cube1.rotation.y += 0.1;
+                cube2.rotation.x += 0.1;
+                cube2.rotation.y += 0.1;
+
+                renderer.render(scene, camera);
+            }
+            render();
+            
+        </script>
+    </body>
+</html>

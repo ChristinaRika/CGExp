@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<meta lang="en" charset="UTF-8">
+
+<head>
+    <link rel="stylesheet" type="text/css" href="css/style.css">
+    <title>CG Exp 01</title>
+</head>
+
+<body>
+    <div id="info"></div>
+    <script src="js/three.js"></script>
+
+    <script type="x-shader/x-vertex" id="vertexshader">
+            void main()
+            {
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); 
+            }
+        </script>
+    <script type="x-shader/x-fragment" id="fragmentshader">
+            void main()
+            {
+                gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+            }
+        </script>
+    <script type="x-shader/x-fragment" id="fragmentshader1">
+        void main()
+            {
+                gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0);
+            }
+    </script>
+    <script type="x-shader/x-fragment" id="fragmentshader2">
+        void main()
+            {
+                gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);
+            }
+    </script>
+    <script>
+        var scene = new THREE.Scene();
+
+        var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+        var renderer = new THREE.WebGLRenderer({
+            alpha: true,
+            antialias: true
+        });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        //object and direction
+        var array = [];
+        var dir = [];
+
+        var geometry = new THREE.SphereGeometry(0.05, 10, 10);
+                var material = new THREE.ShaderMaterial({
+                    vertexShader: document.getElementById('vertexshader').textContent,
+                    fragmentShader: document.getElementById('fragmentshader1').textContent
+                });
+        document.body.appendChild(renderer.domElement);
+
+        function createModel(num, radius, depth) {
+            for (var i = 0; i < num; i++) {
+                var x = (radius + 3 * Math.sin(5 * 3.14 * i / num) * Math.sin(5 * 3.14 * i / num)) * Math.cos(2 * 3.14 * i / num);
+                var y = (radius + 3 * Math.sin(5 * 3.14 * i / num) * Math.sin(5 * 3.14 * i / num)) * Math.sin(2 * 3.14 * i / num);
+                var sphere = new THREE.Mesh(geometry, material);
+                //mdoel position set
+                sphere.position.set(x * 0.3, y * 0.3, 0);
+                scene.add(sphere);
+                array.push(sphere);
+                dir.push(sphere.position);
+            }
+        }
+
+        createModel(50, 2, 0);
+
+        scene.add(new THREE.AmbientLight(0x00ff00, 0.6));
+        camera.position.z = 5;
+
+
+        var j = 0;
+        function render() {
+            requestAnimationFrame(render);
+            var offset = Math.sin(j) * 0.04;
+            for (var i = 0; i < 50; i++) {
+                array[i].position.x += dir[i].x * offset;
+                array[i].position.y += dir[i].y * offset;
+
+                dir[i].applyAxisAngle(new THREE.Vector3(0, 0, 1), j * 0.005);//rotate this axis
+            }
+            j += 0.1;
+
+            renderer.render(scene, camera);
+        }
+        render();
+
+    </script>
+</body>
+
+</html>

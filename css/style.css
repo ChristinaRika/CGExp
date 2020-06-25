@@ -1,0 +1,62 @@
+body
+{
+    margin : 0px; 
+    overflow: hidden; 
+    font-family: Monospace;
+}
+canvas
+{
+    width: 100%;
+    height: 100%;
+}
+#webglCanvas
+{
+    width: 512;
+    height: 512;
+    background-color: black;
+    border: none;
+}
+#info {
+    position: absolute;
+    top: 0px;
+    width: 60%;
+    color: #ffffff;
+    padding: 5px;
+    margin-left: 600;
+    font-family: Monospace;
+    font-size: 13px;
+    text-align: center;
+}
+#instruction
+{
+    padding-top: 10px;
+    float:left;
+    border:1px solid red; 
+    padding:10px;
+    color :red;
+    background-color: aquamarine;
+}
+#container
+{
+    float:right;
+    border:
+    1px solid red; 
+    padding:10px;
+}
+a {
+    color: #ff0080;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #0080ff;
+}
+h1,h4{
+    align-content: center;
+}
+div{
+    position: absolute; 
+    top: 10px; width:100%; 
+    text-align: center; 
+    z-index: 1;
+}
